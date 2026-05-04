@@ -4,8 +4,8 @@ import path from 'path';
 import axios from 'axios';
 import crypto from 'crypto';
 import fs from 'fs';
-import { keysHandler } from './keys';
-import { mpdHandler } from './mpd';
+import { keysHandler } from '../keys';
+import { mpdHandler } from '../mpd';
 
 export const app = express();
 const PORT = 3000;

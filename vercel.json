@@ -1,8 +1,15 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/server.ts" },
-    { "source": "/playlist.m3u", "destination": "/server.ts" },
-    { "source": "/epg.xml", "destination": "/server.ts" }
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/index.ts" },
+    { "src": "/playlist.m3u", "dest": "api/index.ts" },
+    { "src": "/epg.xml", "dest": "api/index.ts" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
