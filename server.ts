@@ -10,9 +10,13 @@ import { mpdHandler } from './mpd';
 export const app = express();
 const PORT = 3000;
 
-const DATA_FOLDER = path.join(process.cwd(), 'data');
-if (!fs.existsSync(DATA_FOLDER)) {
-    fs.mkdirSync(DATA_FOLDER, { recursive: true });
+const IS_VERCEL = !!process.env.VERCEL;
+const DATA_FOLDER = IS_VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
+
+function ensureDataFolder() {
+    if (!fs.existsSync(DATA_FOLDER)) {
+        fs.mkdirSync(DATA_FOLDER, { recursive: true });
+    }
 }
 
 const TOKEN_EXPIRY_TIME = 7000; // seconds
@@ -41,6 +45,7 @@ function decrypt_data(e_data: string, key: string) {
 }
 
 function getCRED() {
+    ensureDataFolder();
     const filePath = path.join(DATA_FOLDER, 'creds.jtv');
     const keyPath = path.join(DATA_FOLDER, 'credskey.jtv');
     if (!fs.existsSync(filePath) || !fs.existsSync(keyPath)) {
@@ -122,6 +127,7 @@ async function getJioTvData(id: string) {
 }
 
 async function getAndRefreshCookie(url: string) {
+    ensureDataFolder();
     const filePath = path.join(DATA_FOLDER, 'cookie.jtv');
     
     // Check cache
@@ -240,6 +246,7 @@ app.post('/api/jio/send-otp', async (req, res) => {
 
 // Proxy for JioTV Login Verify OTP
 app.post('/api/jio/verify-otp', async (req, res) => {
+    ensureDataFolder();
     const { mobile, otp } = req.body;
     if (!mobile || !otp) {
         return res.status(400).json({ status: 'error', message: 'Mobile and OTP are required' });
@@ -304,6 +311,7 @@ app.post('/api/jio/verify-otp', async (req, res) => {
 
 // Proxy for Refresh Token
 app.post('/api/jio/refresh', async (req, res) => {
+    ensureDataFolder();
     try {
         const credsStr = getCRED();
         const JIO_AUTH = JSON.parse(credsStr);
@@ -497,31 +505,33 @@ app.get('/api/channels', (req, res) => {
     }
 });
 
-async function startServer() {
-    if (process.env.NODE_ENV !== 'production') {
-        const vite = await createViteServer({
-            server: { middlewareMode: true },
-            appType: 'spa',
-        });
-        app.use(vite.middlewares);
-    } else {
-        const distPath = path.join(process.cwd(), 'dist');
-        app.use(express.static(distPath));
-        app.get('*', (req, res) => {
-            res.sendFile(path.join(distPath, 'index.html'));
-        });
-    }
+// Routes for Playlist and DASH Streams
+// (Keep all the app.get/post calls as they are defined globally)
 
-    if (!process.env.VERCEL) {
+// Vite and Static Serving logic (Optional for Vercel as handled by vercel.json)
+if (!IS_VERCEL) {
+    (async () => {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[Server] Initializing Vite middleware...');
+            const vite = await createViteServer({
+                server: { middlewareMode: true },
+                appType: 'spa',
+            });
+            app.use(vite.middlewares);
+        } else {
+            const distPath = path.join(process.cwd(), 'dist');
+            if (fs.existsSync(distPath)) {
+                app.use(express.static(distPath));
+                app.get('*', (req, res) => {
+                    res.sendFile(path.join(distPath, 'index.html'));
+                });
+            }
+        }
+
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on http://0.0.0.0:${PORT}`);
         });
-    }
-}
-
-// Ensure startup for local dev
-if (!process.env.VERCEL) {
-    startServer();
+    })().catch(err => console.error('[Server] Init Error:', err));
 }
 
 export default app;
