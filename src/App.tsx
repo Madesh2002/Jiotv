@@ -101,16 +101,23 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile }),
       });
-      const data: JioResponse = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response (Status: ${response.status})`);
+      }
 
       if (data.status === 'success') {
         setScreen('OTP_VERIFY');
         setCountdown(30);
       } else {
-        setError(data.message);
+        setError(data.message || 'Failed to send OTP');
       }
-    } catch (err) {
-      setError('Connection error. Please try again.');
+    } catch (err: any) {
+      console.error('Send OTP Error:', err);
+      setError(err.message === 'Failed to fetch' ? 'Network error: Check your internet connection' : err.message);
     } finally {
       setLoading(false);
     }
@@ -130,17 +137,24 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile, otp: otpCode }),
       });
-      const data: JioResponse = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response (Status: ${response.status})`);
+      }
 
       if (data.status === 'success') {
         setScreen('SUCCESS');
         setSuccessMsg(null);
         handleGetCookie();
       } else {
-        setError(data.message);
+        setError(data.message || 'Verification failed');
       }
-    } catch (err) {
-      setError('Verification failed. Please try again.');
+    } catch (err: any) {
+      console.error('Verify OTP Error:', err);
+      setError(err.message === 'Failed to fetch' ? 'Network error: Check your connection' : err.message);
     } finally {
       setLoading(false);
     }

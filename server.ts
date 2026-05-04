@@ -223,8 +223,11 @@ app.post('/api/jio/send-otp', async (req, res) => {
                 'os': 'android',
                 'devicetype': 'phone',
                 'content-type': 'application/json',
-                'user-agent': 'okhttp/3.14.9'
-            }
+                'user-agent': 'okhttp/3.14.9',
+                'X-Forwarded-For': '49.34.128.1',
+                'X-Real-IP': '49.34.128.1'
+            },
+            validateStatus: (status) => status < 500
         });
 
         if (response.status === 204) {
@@ -273,8 +276,11 @@ app.post('/api/jio/verify-otp', async (req, res) => {
                 'os': 'android',
                 'devicetype': 'phone',
                 'content-type': 'application/json',
-                'user-agent': 'okhttp/3.14.9'
-            }
+                'user-agent': 'okhttp/3.14.9',
+                'X-Forwarded-For': '49.34.128.1',
+                'X-Real-IP': '49.34.128.1'
+            },
+            validateStatus: (status) => status < 500
         });
 
         const data = response.data;
