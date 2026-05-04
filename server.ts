@@ -7,7 +7,7 @@ import fs from 'fs';
 import { keysHandler } from './keys';
 import { mpdHandler } from './mpd';
 
-const app = express();
+export const app = express();
 const PORT = 3000;
 
 const DATA_FOLDER = path.join(process.cwd(), 'data');
@@ -512,9 +512,16 @@ async function startServer() {
         });
     }
 
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server running on http://0.0.0.0:${PORT}`);
-    });
+    if (!process.env.VERCEL) {
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on http://0.0.0.0:${PORT}`);
+        });
+    }
 }
 
-startServer();
+// Ensure startup for local dev
+if (!process.env.VERCEL) {
+    startServer();
+}
+
+export default app;
