@@ -1,0 +1,6 @@
+{
+  "name": "SNEH-TV Playlist Center",
+  "description": "A powerful IPTV playlist generator with secure OTP authentication and universal M3U/EPG support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
